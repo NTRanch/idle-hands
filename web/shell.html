@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Idle Hands — a companion, waiting (18+)</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #0d0208; color: #eaeaea;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  main { min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 12px; padding: 16px;
+    box-sizing: border-box; }
+  canvas { width: min(92vmin, 720px); height: min(92vmin, 720px);
+    background: #0d0208; border: 1px solid #540e46; touch-action: manipulation; }
+  p { margin: 0; font-size: 13px; color: #ac9393; text-align: center;
+    max-width: 720px; line-height: 1.5; }
+  .pink { color: #ff2e88; }
+</style>
+</head>
+<body>
+<main>
+  <canvas id="game" width="960" height="960"></canvas>
+  <p><span class="pink">IDLE HANDS</span> — 18+ only. Click what she is looking at
+  to connect. Arrows choose, ENTER confirms, P pauses. She remembers being
+  left alone. Sound is generated live and only ever answers your own input.</p>
+  <p id="records"></p>
+</main>
+<script type="module">
+/*__GAME_MJS__*/
+
+const WASM_B64 = "/*__WASM_B64__*/";
+const wasmBytes = Uint8Array.from(atob(WASM_B64), (c) => c.charCodeAt(0));
+
+const params = new URLSearchParams(location.search);
+const demoLevel = params.has("demo") ? Number(params.get("demo")) : null;
+const seed = params.has("seed") ? Number(params.get("seed")) : 20262;
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const game = await createGame(wasmBytes, {
+  seed,
+  level: demoLevel ?? 0,
+  demo: demoLevel !== null,
+});
+if (demoLevel !== null) game.startLevel(demoLevel);
+
+// --- persistence: settings live in the core via its bridge; the memory
+// of past visits (visit count + the loneliness she carried away) is
+// handed to the core at boot and updated when a visit ends. ---
+const LS_KEY = "idle-hands-save-v1";
+let save = { calmRoom: false, textLarge: false, visits: 0, rememberedMilli: 0 };
+try { save = { ...save, ...JSON.parse(localStorage.getItem(LS_KEY) ?? "{}") }; } catch { /* fresh save */ }
+game.applySettings(save.calmRoom, save.textLarge);
+game.applyMemory(save.visits, save.rememberedMilli);
+let lastSettingsBits = game.settingsBits();
+let lastScreen = game.screen();
+let runRecorded = false;
+function persist() { try { localStorage.setItem(LS_KEY, JSON.stringify(save)); } catch { /* private mode */ } }
+function renderRecords() {
+  const el = document.getElementById("records");
+  if (!el) return;
+  el.textContent = save.visits > 0
+    ? `Visits so far: ${save.visits}. Last time she carried away ${Math.round(save.rememberedMilli / 10)}% loneliness.`
+    : "This is your first visit.";
+}
+function noteScreen() {
+  const s = game.screen();
+  const bits = game.settingsBits();
+  if (bits !== lastSettingsBits) {
+    lastSettingsBits = bits;
+    save.calmRoom = (bits & 1) !== 0;
+    save.textLarge = (bits & 2) !== 0;
+    persist();
+  }
+  if (s === 3) runRecorded = false;
+  if ((s === 6 || s === 7) && !runRecorded && lastScreen === 3) {
+    runRecorded = true;
+    save.visits += 1;
+    save.rememberedMilli = game.peakLonelinessMilli();
+    persist();
+    renderRecords();
+  }
+  lastScreen = s;
+}
+renderRecords();
+
+// --- input: pointer position matters (she reacts to WHERE you click).
+let pendingInput = 0;
+let pendingX = 0;
+let pendingY = 0;
+function press(bits) { pendingInput |= bits; ensureAudio(); }
+canvas.addEventListener("pointerdown", (e) => {
+  const r = canvas.getBoundingClientRect();
+  pendingX = Math.round(((e.clientX - r.left) / r.width) * 960);
+  pendingY = Math.round(((e.clientY - r.top) / r.height) * 960);
+  press(INPUT.tap | INPUT.confirm);
+});
+addEventListener("keydown", (e) => {
+  if (e.repeat) return;
+  if (e.code === "Space") { press(INPUT.tap | INPUT.confirm); e.preventDefault(); }
+  else if (e.code === "Enter") press(INPUT.confirm);
+  else if (e.code === "ArrowUp") press(INPUT.up);
+  else if (e.code === "ArrowDown") press(INPUT.down);
+  else if (e.code === "KeyP" || e.code === "Escape") press(INPUT.pause);
+  else if (e.code === "Backspace") press(INPUT.back);
+});
+
+// --- audio: generated WebAudio, only after a user gesture, only in
+// response to events the player's input caused. Event codes: 1
+// connection, 2 startle, 3 miss, 4 sequence, 5 victory, 6 game over,
+// 7 ui, 8 fidget (silent — her fidgets make no sound for us). ---
+let audio = null;
+function ensureAudio() {
+  if (audio) { if (audio.state === "suspended") audio.resume(); return; }
+  try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch { audio = null; }
+}
+function tone(freq, dur, type = "sine", gain = 0.12, when = 0) {
+  if (!audio) return;
+  const t0 = audio.currentTime + when;
+  const osc = audio.createOscillator();
+  const g = audio.createGain();
+  osc.type = type; osc.frequency.value = freq;
+  g.gain.setValueAtTime(gain, t0);
+  g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+  osc.connect(g).connect(audio.destination);
+  osc.start(t0); osc.stop(t0 + dur);
+}
+function sonify(code) {
+  switch (code) {
+    case 1: tone(587, 0.12, "sine", 0.13); tone(880, 0.18, "sine", 0.09, 0.07); break;
+    case 2: tone(340, 0.06, "triangle", 0.07); break;
+    case 3: tone(196, 0.12, "sawtooth", 0.04); break;
+    case 4: tone(523, 0.1); tone(659, 0.1, "sine", 0.1, 0.08); tone(784, 0.16, "sine", 0.1, 0.16); break;
+    case 5: tone(523, 0.4); tone(659, 0.4, "sine", 0.1, 0.05); tone(784, 0.5, "sine", 0.1, 0.1); break;
+    case 6: tone(220, 0.3, "triangle", 0.09); tone(165, 0.45, "triangle", 0.09, 0.2); break;
+    case 7: tone(440, 0.04, "sine", 0.05); break;
+  }
+}
+
+// --- painting ---
+function paint(frame) {
+  for (const op of frame.ops) {
+    const kind = op[0];
+    const ci = kind === "t" ? op[4] : op[op.length - 1];
+    ctx.fillStyle = frame.palette[ci] ?? "#ff2e88";
+    ctx.strokeStyle = ctx.fillStyle;
+    if (kind === "r") ctx.fillRect(op[1], op[2], op[3], op[4]);
+    else if (kind === "c") { ctx.beginPath(); ctx.arc(op[1], op[2], op[3], 0, 6.2832); ctx.fill(); }
+    else if (kind === "l") {
+      ctx.lineWidth = op[5]; ctx.beginPath(); ctx.moveTo(op[1], op[2]); ctx.lineTo(op[3], op[4]); ctx.stroke();
+    } else if (kind === "p") {
+      ctx.beginPath(); ctx.moveTo(op[1], op[2]); ctx.lineTo(op[3], op[4]); ctx.lineTo(op[5], op[6]);
+      ctx.closePath(); ctx.fill();
+    } else if (kind === "t") {
+      ctx.font = `${op[3]}px ui-monospace, Menlo, monospace`;
+      ctx.textBaseline = "top";
+      ctx.fillText(op[5], op[1], op[2]);
+    }
+  }
+}
+
+// --- fixed-step loop ---
+let acc = 0;
+let last = performance.now();
+function loop(now) {
+  acc += Math.min(now - last, 250);
+  last = now;
+  let stepped = false;
+  while (acc >= 16) {
+    const bits = pendingInput;
+    pendingInput = 0;
+    game.step(bits, pendingX, pendingY);
+    const ev = game.event();
+    if (ev !== 0) sonify(ev);
+    acc -= 16;
+    stepped = true;
+  }
+  if (stepped) { noteScreen(); paint(game.frame()); }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
