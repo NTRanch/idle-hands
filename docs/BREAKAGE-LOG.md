@@ -38,3 +38,11 @@ bloch at the week's close (the log is the input, bloch is the record).
   localStorage): settings + visit count + carried-away loneliness.
   There is no mid-visit save; a visit is one sitting. Recorded here
   rather than silently narrowing R-202/R-203.
+- **B-8: menu/end-screen text clipped in the raster (post-tag fix).**
+  The estate-wide raster-advance audit (Exposure B-4) flagged the
+  how-to lines, both end titles, and the L2 sequence banner: set at
+  sizes whose raster advance runs past the right edge of the rendered
+  surface. Fix: how-to and banner at size 20, end titles at 40 with
+  adjusted placement; audit CLEAN on all screens; previews
+  re-captured. Fix commit on top of v1.0.0 before any push; the tag
+  moves with it.

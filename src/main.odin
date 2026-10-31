@@ -863,7 +863,7 @@ render_howto :: proc(g: ^Game) {
 		"SHE REMEMBERS BEING LEFT ALONE.",
 	}
 	for ln, i in lines {
-		dw_text(180, 230 + i * 52, text_size(g, 26), PAL_PAPER, ln)
+		dw_text(180, 230 + i * 52, text_size(g, 20), PAL_PAPER, ln)
 	}
 	if (g.frame / 30) % 2 == 0 {
 		dw_text(300, 830, text_size(g, 24), PAL_DIM, "CONFIRM TO RETURN")
@@ -902,10 +902,10 @@ render_pause :: proc(g: ^Game) {
 render_end :: proc(g: ^Game, won: bool) {
 	render_room(g, false)
 	if won {
-		dw_text(300, 280, text_size(g, 52), PAL_PINK, "SHE STAYS A WHILE")
+		dw_text(240, 280, text_size(g, 40), PAL_PINK, "SHE STAYS A WHILE")
 		dw_text(330, 380, text_size(g, 30), PAL_PAPER, "THE VISIT ENDS WARM")
 	} else {
-		dw_text(280, 280, text_size(g, 52), PAL_MAUVE, "THE ROOM GOES QUIET")
+		dw_text(160, 280, text_size(g, 40), PAL_MAUVE, "THE ROOM GOES QUIET")
 		dw_text(300, 380, text_size(g, 30), PAL_PAPER, "LONELINESS FILLED THE ROOM")
 	}
 	if (g.frame / 30) % 2 == 0 {
@@ -1065,7 +1065,7 @@ render_actor :: proc(g: ^Game) {
 				dw_circle(p.x, p.y, 46, PAL_PINK)
 				dw_circle(p.x, p.y, 40, PAL_PLUM)
 			}
-			dw_text(310, 130, text_size(g, 26), PAL_PAPER, "NOW TOGETHER - CLICK THE COILS IN ORDER")
+			dw_text(310, 130, text_size(g, 20), PAL_PAPER, "NOW TOGETHER - CLICK THE COILS IN ORDER")
 		}
 	}
 }
