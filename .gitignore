@@ -1,3 +1,5 @@
 build/
 *.o
 book/html/
+.capture-frames/
+zig-out/

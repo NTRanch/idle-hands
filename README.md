@@ -16,5 +16,39 @@ this repo's bloch roadmap is [`.ai/roadmap.md`](.ai/roadmap.md).
   (book chapter: Quality Bar).
 - **Audio:** nothing is ever played aloud by an agent; the Owner presses play.
 
-Status: scaffold (planning + baseline config). The jam clock for this entry
-starts on the Owner's word for week 2.
+## Play
+
+Open [`web/index.html`](web/index.html) in a browser — it runs fully
+offline. She waits, breathes, blinks, and looks at things: the window,
+the rope, her hands, you. Click the thing she is looking at (once her
+look has settled) to connect. Leave her unseen and loneliness changes
+how she sits — and greets your next visit.
+
+- **Level 1 — First Visit:** make 8 connections before loneliness
+  fills the room.
+- **Level 2 — Rope Practice:** watch the coil order she shows you,
+  then click the coils back in order — three sequences together.
+- **Level 3 — The Long Quiet:** stay with her for 150 seconds while
+  the room pulls her attention thin.
+
+Settings (room motion, text size), your visit count, and the loneliness
+she carries away persist in the browser. Settings are reachable before
+any play.
+
+## Preview videos (rendered from the shipped core, demo mode)
+
+- [Level 1 — First Visit](docs/previews/level-1-idle-hands.mp4)
+- [Level 2 — Rope Practice](docs/previews/level-2-idle-hands.mp4)
+- [Level 3 — The Long Quiet](docs/previews/level-3-idle-hands.mp4)
+
+## Build & verify
+
+```sh
+just build   # Odin core -> wasm + assemble web/index.html
+just check   # 11 core tests, bridges, perf budget, playtest
+just previews
+```
+
+Status: **v1.0.0** (2026-10-30) — playable, gated, tagged. The seahawk
+playtest pass on primo and the live itch.io entry checks (GJ-07) remain
+scheduled follow-ups; both are recorded in `docs/BREAKAGE-LOG.md`.

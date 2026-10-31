@@ -1,0 +1,18 @@
+---
+origin_lane: restricted
+content_label: nsfw
+evidence: default: restricted-origin without positive SFW evidence
+---
+# Attempt fix — R-905 Seahawk playtest pass recorded; breakage log filed
+
+last_verified: 2026-10-31
+applies_to: 0.1.0
+disposition: 
+scope: repo_task
+subject: R-905
+
+failing errors, in order:
+1. bash -c "node tools/playtest.mjs && test -f docs/PLAYTEST-2026-10-30.md": exit code 1
+
+what fixed it (successful attempt's note): (no note recorded)
+confidence trajectory: start → fail → pass
