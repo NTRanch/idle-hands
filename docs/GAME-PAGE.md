@@ -14,7 +14,7 @@ All characters depicted are adults.
 
 ## A companion idle game where you watch Yui, click what catches her eye, and keep her company before loneliness fills the room.
 
-<p align="center"><a href="https://github.com/NTRanch/idle-hands">GitHub</a> · <a href="https://github.com/NTRanch/idle-hands/blob/main/LICENSE.md">License</a> · <a href="https://ntranch.itch.io">itch.io studio page</a></p>
+<p align="center"><a href="https://github.com/NTRanch/idle-hands">GitHub</a> · <a href="https://github.com/NTRanch/idle-hands/blob/main/LICENSE.md">License</a> · <a href="https://ntranch.itch.io">itch.io studio page</a> · <a href="https://github.com/NTRanch/idle-hands/releases/tag/v1.0.0">Release</a></p>
 
 ![Idle Hands header](../assets/brand/header.png)
 
